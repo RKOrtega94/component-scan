@@ -1,0 +1,42 @@
+# Application Configuration for Services using Route Scanner
+spring:
+  # Kafka Configuration (for route scanning)
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: ${spring.application.name}-consumer-group
+      auto-offset-reset: earliest
+
+# Route Scanner Configuration
+route:
+  scanner:
+    enabled: true
+    # Enable/disable specific scanning types
+    controller:
+      enabled: true
+    swagger:
+      enabled: true
+    kafka:
+      topic: gateway-route-config
+    base-package: ec.com.ecommerce
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    disable-swagger-default-url: true
+
+# Logging
+logging:
+  level:
+    ec.com.ecommerce.scanner: DEBUG
+    org.springframework.kafka: INFO
