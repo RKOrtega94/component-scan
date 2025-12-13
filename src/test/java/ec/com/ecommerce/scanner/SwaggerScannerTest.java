@@ -45,7 +45,7 @@ class SwaggerScannerTest {
         when(environment.getProperty("route.scanner.swagger.include-swagger-resources")).thenReturn("true");
 
         // Mock Class.forName to simulate springdoc presence
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenReturn(Object.class);
 
@@ -66,7 +66,7 @@ class SwaggerScannerTest {
         when(environment.getProperty("route.scanner.swagger.include-swagger-resources")).thenReturn("true");
 
         // Mock Class.forName to simulate springfox presence (springdoc not present)
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenThrow(new ClassNotFoundException());
             classMock.when(() -> Class.forName("springfox.documentation.spring.web.plugins.Docket"))
@@ -87,7 +87,7 @@ class SwaggerScannerTest {
         when(environment.getProperty("spring.application.name", "unknown")).thenReturn("test-service");
 
         // Mock Class.forName to simulate no Swagger dependencies
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenThrow(new ClassNotFoundException());
             classMock.when(() -> Class.forName("springfox.documentation.spring.web.plugins.Docket"))
@@ -113,7 +113,7 @@ class SwaggerScannerTest {
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
 
         // Mock Class.forName to simulate springdoc presence
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenReturn(Object.class);
 
@@ -191,7 +191,7 @@ class SwaggerScannerTest {
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
 
         // Mock Class.forName to simulate springdoc presence
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenReturn(Object.class);
 
@@ -240,7 +240,7 @@ class SwaggerScannerTest {
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
 
         // Mock Class.forName to simulate springdoc presence
-        try (MockedStatic<Class> classMock = mockStatic(Class.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<Class> classMock = mockStatic(Class.class)) {
             classMock.when(() -> Class.forName("org.springdoc.core.configuration.SpringDocConfiguration"))
                     .thenReturn(Object.class);
 
