@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Slf4j
 public class SwaggerScanner {
-    
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -33,7 +33,7 @@ public class SwaggerScanner {
             }
 
             List<RouteConfigMessage> swaggerRoutes = generateSwaggerRoutes(serviceName, context);
-            
+
             for (RouteConfigMessage route : swaggerRoutes) {
                 String jsonMessage = objectMapper.writeValueAsString(route);
                 kafkaTemplate.send("gateway-route-config", serviceName, jsonMessage);
@@ -70,77 +70,33 @@ public class SwaggerScanner {
      */
     private static List<RouteConfigMessage> generateSwaggerRoutes(String serviceName, ApplicationContext context) {
         List<RouteConfigMessage> routes = new ArrayList<>();
-        
+
         // Get configuration properties
         boolean includeWebjars = getBooleanProperty(context, "route.scanner.swagger.include-webjars", true);
         boolean includeSwaggerResources = getBooleanProperty(context, "route.scanner.swagger.include-swagger-resources", true);
-        
+
         // Swagger UI route
-        RouteConfigMessage swaggerUIRoute = RouteConfigMessage.builder()
-                .routeId(serviceName + "-swagger-ui")
-                .uri("lb://" + getFullServiceName(serviceName))
-                .predicates(Arrays.asList("Path=/swagger-ui/**"))
-                .filters(Arrays.asList("StripPrefix=0"))
-                .orderNum(1) // High priority for documentation
-                .description("Swagger UI for " + serviceName + " service")
-                .enabled(true)
-                .serviceName(serviceName)
-                .build();
+        RouteConfigMessage swaggerUIRoute = RouteConfigMessage.builder().routeId(serviceName + "-swagger-ui").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/swagger-ui/**")).filters(Arrays.asList("StripPrefix=0")).orderNum(1) // High priority for documentation
+                .description("Swagger UI for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
         routes.add(swaggerUIRoute);
 
         // Swagger UI index route
-        RouteConfigMessage swaggerUIIndexRoute = RouteConfigMessage.builder()
-                .routeId(serviceName + "-swagger-ui-index")
-                .uri("lb://" + getFullServiceName(serviceName))
-                .predicates(Arrays.asList("Path=/swagger-ui.html"))
-                .filters(Arrays.asList("StripPrefix=0"))
-                .orderNum(2)
-                .description("Swagger UI index page for " + serviceName + " service")
-                .enabled(true)
-                .serviceName(serviceName)
-                .build();
+        RouteConfigMessage swaggerUIIndexRoute = RouteConfigMessage.builder().routeId(serviceName + "-swagger-ui-index").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/swagger-ui.html")).filters(Arrays.asList("StripPrefix=0")).orderNum(2).description("Swagger UI index page for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
         routes.add(swaggerUIIndexRoute);
 
         // OpenAPI JSON/YAML documentation route
-        RouteConfigMessage apiDocsRoute = RouteConfigMessage.builder()
-                .routeId(serviceName + "-api-docs")
-                .uri("lb://" + getFullServiceName(serviceName))
-                .predicates(Arrays.asList("Path=/v3/api-docs/**"))
-                .filters(Arrays.asList("StripPrefix=0"))
-                .orderNum(3)
-                .description("OpenAPI documentation for " + serviceName + " service")
-                .enabled(true)
-                .serviceName(serviceName)
-                .build();
+        RouteConfigMessage apiDocsRoute = RouteConfigMessage.builder().routeId(serviceName + "-api-docs").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/v3/api-docs/**")).filters(Arrays.asList("StripPrefix=0")).orderNum(3).description("OpenAPI documentation for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
         routes.add(apiDocsRoute);
 
         // Conditionally add swagger resources route (for older versions)
         if (includeSwaggerResources) {
-            RouteConfigMessage swaggerResourcesRoute = RouteConfigMessage.builder()
-                    .routeId(serviceName + "-swagger-resources")
-                    .uri("lb://" + getFullServiceName(serviceName))
-                    .predicates(Arrays.asList("Path=/swagger-resources/**"))
-                    .filters(Arrays.asList("StripPrefix=0"))
-                    .orderNum(4)
-                    .description("Swagger resources for " + serviceName + " service")
-                    .enabled(true)
-                    .serviceName(serviceName)
-                    .build();
+            RouteConfigMessage swaggerResourcesRoute = RouteConfigMessage.builder().routeId(serviceName + "-swagger-resources").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/swagger-resources/**")).filters(Arrays.asList("StripPrefix=0")).orderNum(4).description("Swagger resources for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
             routes.add(swaggerResourcesRoute);
         }
 
         // Conditionally add WebjarsLocator route (for Swagger UI assets)
         if (includeWebjars) {
-            RouteConfigMessage webjarsRoute = RouteConfigMessage.builder()
-                    .routeId(serviceName + "-webjars")
-                    .uri("lb://" + getFullServiceName(serviceName))
-                    .predicates(Arrays.asList("Path=/webjars/**"))
-                    .filters(Arrays.asList("StripPrefix=0"))
-                    .orderNum(5)
-                    .description("Webjars assets for " + serviceName + " service")
-                    .enabled(true)
-                    .serviceName(serviceName)
-                    .build();
+            RouteConfigMessage webjarsRoute = RouteConfigMessage.builder().routeId(serviceName + "-webjars").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/webjars/**")).filters(Arrays.asList("StripPrefix=0")).orderNum(5).description("Webjars assets for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
             routes.add(webjarsRoute);
             log.debug("Added WebJars route for service: {}", serviceName);
         } else {
@@ -148,20 +104,10 @@ public class SwaggerScanner {
         }
 
         // Swagger configuration route
-        RouteConfigMessage swaggerConfigRoute = RouteConfigMessage.builder()
-                .routeId(serviceName + "-swagger-config")
-                .uri("lb://" + getFullServiceName(serviceName))
-                .predicates(Arrays.asList("Path=/v3/api-docs/swagger-config"))
-                .filters(Arrays.asList("StripPrefix=0"))
-                .orderNum(6)
-                .description("Swagger configuration for " + serviceName + " service")
-                .enabled(true)
-                .serviceName(serviceName)
-                .build();
+        RouteConfigMessage swaggerConfigRoute = RouteConfigMessage.builder().routeId(serviceName + "-swagger-config").uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/v3/api-docs/swagger-config")).filters(Arrays.asList("StripPrefix=0")).orderNum(6).description("Swagger configuration for " + serviceName + " service").enabled(true).serviceName(serviceName).build();
         routes.add(swaggerConfigRoute);
 
-        log.debug("Generated {} Swagger routes for service: {} (webjars: {}, swagger-resources: {})", 
-                routes.size(), serviceName, includeWebjars, includeSwaggerResources);
+        log.debug("Generated {} Swagger routes for service: {} (webjars: {}, swagger-resources: {})", routes.size(), serviceName, includeWebjars, includeSwaggerResources);
         return routes;
     }
 
@@ -175,16 +121,7 @@ public class SwaggerScanner {
         // Create routes for each service's documentation accessible via gateway
         for (String serviceName : serviceNames) {
             // Route for service-specific Swagger UI via gateway
-            RouteConfigMessage serviceSwaggerRoute = RouteConfigMessage.builder()
-                    .routeId("gateway-swagger-" + serviceName)
-                    .uri("lb://" + getFullServiceName(serviceName))
-                    .predicates(Arrays.asList("Path=/docs/" + serviceName + "/**"))
-                    .filters(Arrays.asList("StripPrefix=2", "AddRequestHeader=X-Service-Name," + serviceName))
-                    .orderNum(10)
-                    .description("Gateway aggregated Swagger for " + serviceName + " service")
-                    .enabled(true)
-                    .serviceName("gateway")
-                    .build();
+            RouteConfigMessage serviceSwaggerRoute = RouteConfigMessage.builder().routeId("gateway-swagger-" + serviceName).uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=/docs/" + serviceName + "/**")).filters(Arrays.asList("StripPrefix=2", "AddRequestHeader=X-Service-Name," + serviceName)).orderNum(10).description("Gateway aggregated Swagger for " + serviceName + " service").enabled(true).serviceName("gateway").build();
             routes.add(serviceSwaggerRoute);
         }
 
@@ -202,8 +139,7 @@ public class SwaggerScanner {
      * Get service name from application context
      */
     private static String getServiceName(ApplicationContext context) {
-        return context.getEnvironment().getProperty("spring.application.name", "unknown")
-                .replaceAll("(?i)[-_]service$", "");
+        return context.getEnvironment().getProperty("spring.application.name", "unknown").replaceAll("(?i)[-_]service$", "");
     }
 
     /**
