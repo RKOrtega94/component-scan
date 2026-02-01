@@ -1,5 +1,6 @@
-package ec.com.ecommerce;
+package ec.com.ecommerce.scanner;
 
+import ec.com.ecommerce.scanner.AppScannerComponent;
 import ec.com.ecommerce.scanner.ControllerScanner;
 import ec.com.ecommerce.scanner.SwaggerScanner;
 import org.junit.jupiter.api.Test;
@@ -30,14 +31,20 @@ class AppScannerComponentTest {
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
 
-    @InjectMocks
+    @Mock
+    private org.springframework.beans.factory.ObjectProvider<KafkaTemplate<String, String>> kafkaTemplateProvider;
+
     private AppScannerComponent appScannerComponent;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        appScannerComponent = new AppScannerComponent(context, kafkaTemplateProvider);
+    }
 
     @Test
     void shouldCallBothScannersWhenBothEnabled() {
         // Given
-        when(context.getEnvironment()).thenReturn(environment);
-        when(environment.getProperty("spring.application.name")).thenReturn("test-service");
+        when(kafkaTemplateProvider.getIfAvailable()).thenReturn(kafkaTemplate);
         
         // Set both scanners to enabled
         ReflectionTestUtils.setField(appScannerComponent, "swaggerScanningEnabled", true);
@@ -58,8 +65,7 @@ class AppScannerComponentTest {
     @Test
     void shouldSkipControllerScannerWhenDisabled() {
         // Given
-        when(context.getEnvironment()).thenReturn(environment);
-        when(environment.getProperty("spring.application.name")).thenReturn("test-service");
+        when(kafkaTemplateProvider.getIfAvailable()).thenReturn(kafkaTemplate);
         
         // Set controller scanner to disabled, swagger scanner to enabled
         ReflectionTestUtils.setField(appScannerComponent, "swaggerScanningEnabled", true);
@@ -80,8 +86,7 @@ class AppScannerComponentTest {
     @Test
     void shouldSkipSwaggerScannerWhenDisabled() {
         // Given
-        when(context.getEnvironment()).thenReturn(environment);
-        when(environment.getProperty("spring.application.name")).thenReturn("test-service");
+        when(kafkaTemplateProvider.getIfAvailable()).thenReturn(kafkaTemplate);
         
         // Set swagger scanner to disabled, controller scanner to enabled
         ReflectionTestUtils.setField(appScannerComponent, "swaggerScanningEnabled", false);
@@ -102,8 +107,7 @@ class AppScannerComponentTest {
     @Test
     void shouldSkipBothScannersWhenBothDisabled() {
         // Given
-        when(context.getEnvironment()).thenReturn(environment);
-        when(environment.getProperty("spring.application.name")).thenReturn("test-service");
+        when(kafkaTemplateProvider.getIfAvailable()).thenReturn(kafkaTemplate);
         
         // Set both scanners to disabled
         ReflectionTestUtils.setField(appScannerComponent, "swaggerScanningEnabled", false);
