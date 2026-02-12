@@ -24,6 +24,7 @@ public class SwaggerScanner {
     public static void scanSwaggerRoutes(ApplicationContext context, KafkaTemplate<String, String> kafkaTemplate) {
         try {
             String serviceName = getServiceName(context);
+            String routeTopic = getRouteTopic(context);
             log.info("Scanning Swagger routes for service: {}", serviceName);
 
             // Check if Swagger/OpenAPI is available in the classpath
@@ -36,7 +37,7 @@ public class SwaggerScanner {
 
             for (RouteConfigMessage route : swaggerRoutes) {
                 String jsonMessage = objectMapper.writeValueAsString(route);
-                kafkaTemplate.send("gateway-route-config", serviceName, jsonMessage);
+                kafkaTemplate.send(routeTopic, serviceName, jsonMessage);
                 log.info("Sent Swagger route configuration: {} -> {}", route.getRouteId(), route.getPredicates());
             }
 
@@ -140,6 +141,10 @@ public class SwaggerScanner {
      */
     private static String getServiceName(ApplicationContext context) {
         return context.getEnvironment().getProperty("spring.application.name", "unknown").replaceAll("(?i)[-_]service$", "");
+    }
+
+    private static String getRouteTopic(ApplicationContext context) {
+        return context.getEnvironment().getProperty("route.scanner.kafka.topic", "gateway-route-config");
     }
 
     /**

@@ -29,6 +29,7 @@ public class ControllerScanner {
     public static void scanController(ApplicationContext context, KafkaTemplate<String, String> kafkaTemplate) {
         try {
             String serviceName = getServiceName(context);
+            String routeTopic = getRouteTopic(context);
             Set<Class<?>> controllers = scanControllers(context);
             int routeOrder = 0;
             for (Class<?> controllerClass : controllers) {
@@ -36,7 +37,7 @@ public class ControllerScanner {
 
                 for (RouteConfigMessage route : routes) {
                     String jsonMessage = objectMapper.writeValueAsString(route);
-                    kafkaTemplate.send("gateway-route-config", serviceName, jsonMessage);
+                    kafkaTemplate.send(routeTopic, serviceName, jsonMessage);
                     routeOrder++;
                 }
             }
@@ -79,12 +80,22 @@ public class ControllerScanner {
 
         // Create route for base path with wildcard if we have mapped methods
         if (!uniquePaths.isEmpty()) {
-            String pathPattern = basePath.equals("/") ? "/**" : basePath + "/**";
+            if ("/".equals(basePath)) {
+                int order = startOrder;
+                for (String path : uniquePaths) {
+                    String pathPattern = buildSpecificPathPattern(path);
+                    RouteConfigMessage route = RouteConfigMessage.builder().routeId(buildRouteId(serviceName, controllerClass, pathPattern)).uri("lb://" + getFullServiceName(serviceName)).predicates(List.of("Path=" + pathPattern)).filters(List.of("StripPrefix=0")).orderNum(order++).description("Auto-generated route for " + serviceName + " service - " + controllerClass.getSimpleName()).enabled(true).serviceName(serviceName).build();
+                    routes.add(route);
+                }
+            } else {
+                String pathPattern = basePath + "/**";
+                RouteConfigMessage route = RouteConfigMessage.builder().routeId(serviceName + "-" + controllerClass.getSimpleName().toLowerCase()).uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=" + pathPattern)).filters(Arrays.asList("StripPrefix=0")).orderNum(startOrder).description("Auto-generated route for " + serviceName + " service - " + controllerClass.getSimpleName()).enabled(true).serviceName(serviceName).build();
+                routes.add(route);
+            }
+        }
 
-            RouteConfigMessage route = RouteConfigMessage.builder().routeId(serviceName + "-" + controllerClass.getSimpleName().toLowerCase()).uri("lb://" + getFullServiceName(serviceName)).predicates(Arrays.asList("Path=" + pathPattern)).filters(Arrays.asList("StripPrefix=0")).orderNum(startOrder).description("Auto-generated route for " + serviceName + " service - " + controllerClass.getSimpleName()).enabled(true).serviceName(serviceName).build();
-
-            routes.add(route);
-            log.debug("Generated route: {} -> {}", route.getRouteId(), pathPattern);
+        for (RouteConfigMessage route : routes) {
+            log.debug("Generated route: {} -> {}", route.getRouteId(), route.getPredicates());
         }
 
         return routes;
@@ -94,6 +105,13 @@ public class ControllerScanner {
      * Extract path from method-level mapping annotations
      */
     private static String extractMethodPath(Method method) {
+        return extractMethodPathStatic(method);
+    }
+
+    /**
+     * Extract path from method-level mapping annotations (public for scanner access)
+     */
+    public static String extractMethodPathStatic(Method method) {
         if (method.isAnnotationPresent(RequestMapping.class)) {
             RequestMapping mapping = method.getAnnotation(RequestMapping.class);
             return getFirstPath(mapping.value(), mapping.path());
@@ -148,6 +166,22 @@ public class ControllerScanner {
         return path;
     }
 
+    private static String buildSpecificPathPattern(String path) {
+        String normalized = normalizePath(path);
+        if ("/".equals(normalized)) {
+            return "/";
+        }
+        return normalized.replaceAll("\\{[^/]+}", "*");
+    }
+
+    private static String buildRouteId(String serviceName, Class<?> controllerClass, String pathPattern) {
+        String suffix = pathPattern.replaceAll("[^a-zA-Z0-9]+", "-").replaceAll("(^-+|-+$)", "").toLowerCase();
+        if (suffix.isEmpty()) {
+            suffix = "root";
+        }
+        return serviceName + "-" + controllerClass.getSimpleName().toLowerCase() + "-" + suffix;
+    }
+
     /**
      * Get a full service name (with-service suffix)
      */
@@ -163,6 +197,10 @@ public class ControllerScanner {
      */
     private static String getServiceName(ApplicationContext context) {
         return context.getEnvironment().getProperty("spring.application.name", "unknown").replaceAll("(?i)[-_]service$", "");
+    }
+
+    private static String getRouteTopic(ApplicationContext context) {
+        return context.getEnvironment().getProperty("route.scanner.kafka.topic", "gateway-route-config");
     }
 
     /**

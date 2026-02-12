@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import static ec.com.ecommerce.scanner.ControllerScanner.scanController;
 import static ec.com.ecommerce.scanner.SwaggerScanner.scanSwaggerRoutes;
+import static ec.com.ecommerce.scanner.PermissionScanner.scanPermissions;
 
 @Slf4j
 @Component
@@ -39,7 +40,10 @@ public class AppScannerComponent {
             log.warn("KafkaTemplate bean not found. Route scanning will be skipped. To enable, add spring-kafka and a KafkaTemplate bean to the application context.");
             return;
         }
-        if (controllerScanningEnabled) scanController(context, kafkaTemplate);
+        if (controllerScanningEnabled) {
+            scanController(context, kafkaTemplate);
+            scanPermissions(context, kafkaTemplate);
+        }
         if (swaggerScanningEnabled) scanSwaggerRoutes(context, kafkaTemplate);
     }
 }

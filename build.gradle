@@ -5,14 +5,15 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework:spring-context'
     implementation 'org.springframework.boot:spring-boot'
-    
+    implementation 'org.springframework.security:spring-security-core'
+
     // Swagger/OpenAPI dependencies (optional - for detection)
     compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
     compileOnly 'io.swagger.core.v3:swagger-core:2.2.15'
-    
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    
+
     // Test dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.mockito:mockito-core'
